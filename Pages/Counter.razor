@@ -1,0 +1,80 @@
+﻿@page "/counter"
+@using System.Net.Http.Json
+@using BlazorDbzApiPersonaExtra.Models
+@inject HttpClient Http
+
+<PageTitle>Dragon Ball API</PageTitle>
+
+<h1>Buscar Personagem Dragon Ball</h1>
+
+<p>Digite o ID do personagem:</p>
+
+<input type="number" @bind="idPersonagem" min="1" />
+
+<button class="btn btn-primary" @onclick="BuscarPersonagem">
+    Buscar
+</button>
+
+@if (carregando)
+{
+    <p>Carregando...</p>
+}
+
+@if (!string.IsNullOrWhiteSpace(mensagemErro))
+{
+    <p style="color:red">@mensagemErro</p>
+}
+
+@if (personagem is not null)
+{
+    <hr />
+
+    <h2>@personagem.Name</h2>
+
+    <img src="@personagem.Image" 
+         alt="@personagem.Name" 
+         style="width:250px; max-width:100%;" />
+
+    <p><strong>Nome:</strong> @personagem.Name</p>
+    <p><strong>Raça:</strong> @personagem.Race</p>
+}
+
+@code {
+    private int idPersonagem = 1;
+    private Personagem? personagem;
+    private bool carregando = false;
+    private string? mensagemErro;
+
+    private async Task BuscarPersonagem()
+    {
+        personagem = null;
+        mensagemErro = null;
+        carregando = true;
+
+        try
+        {
+            if (idPersonagem <= 0)
+            {
+                mensagemErro = "Digite um ID válido.";
+                return;
+            }
+
+            personagem = await Http.GetFromJsonAsync<Personagem>(
+                $"https://dragonball-api.com/api/characters/{idPersonagem}"
+            );
+
+            if (personagem is null)
+            {
+                mensagemErro = "Personagem não encontrado.";
+            }
+        }
+        catch
+        {
+            mensagemErro = "Erro ao buscar personagem. Verifique o ID informado.";
+        }
+        finally
+        {
+            carregando = false;
+        }
+    }
+}
